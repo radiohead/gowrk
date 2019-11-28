@@ -8,11 +8,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
-	"github.com/radiohead/gowrk/pkg/types"
 )
-
-var emptyStruct = struct{}{}
 
 var (
 	// ErrRequestFailed is returned when the response from the server has a non-successful HTTP status code.
@@ -23,13 +19,17 @@ var (
 	ErrZeroRate = errors.New("cannot use 0 as request rate")
 )
 
+type httpClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
 // Runner send HTTP requests using provided HTTP request configuration and HTTP client
 // at the given rate. If the runner is configured to be verbose, it will log failed requests.
 type Runner struct {
 	period       time.Duration
 	verbose      bool
 	request      *http.Request
-	client       types.HTTPClient
+	client       httpClient
 	counterCh    chan interface{}
 	errCounterCh chan interface{}
 	closeCh      chan interface{}
@@ -38,10 +38,10 @@ type Runner struct {
 // New returns a new Runner, configured with given request, client, rate and verbose parameters.
 // If the rate is 0, an error is returned, since a zero-rate runner is a noop.
 func New(
-	rate uint64,
+	rate uint,
 	verbose bool,
 	request *http.Request,
-	client types.HTTPClient,
+	client httpClient,
 	closeCh chan interface{},
 ) (*Runner, error) {
 	if rate < 1 {
@@ -66,8 +66,8 @@ func New(
 // but it will wait for all in-flight requests before returning.
 func (r *Runner) Start() {
 	var (
-		reqCounter uint64
-		errCounter uint64
+		reqCounter uint
+		errCounter uint
 		wg         sync.WaitGroup
 	)
 
@@ -127,10 +127,10 @@ func (r *Runner) doRequest(wg *sync.WaitGroup) {
 }
 
 func (r *Runner) logRequest(err error) {
-	r.counterCh <- emptyStruct
+	r.counterCh <- struct{}{}
 
 	if err != nil {
-		r.errCounterCh <- emptyStruct
+		r.errCounterCh <- struct{}{}
 
 		if r.verbose {
 			log.Println(err)

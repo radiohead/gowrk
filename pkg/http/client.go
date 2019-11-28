@@ -9,7 +9,7 @@ import (
 // NewClient returns new http.Client optimised for high amount of outgoing requests,
 // using increased amount of maximum idle connections per host in client's pool.
 // connCount controls the amount of connections in the pool.
-func NewClient(connCount uint16) *http.Client {
+func NewClient(connCount uint32) *http.Client {
 	// Taken from http://tleyden.github.io/blog/2016/11/21/tuning-the-go-http-client-library-for-load-testing/
 	dialer := &net.Dialer{
 		Timeout:   30 * time.Second,

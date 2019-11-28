@@ -19,6 +19,10 @@ lint:
 	golangci-lint run
 .PHONY: lint
 
+mocks:
+	go generate ./...
+.PHONY: mocks
+
 test:
 	go test -race -covermode=atomic -coverprofile=coverage.out -cover -v $(GOPKGS)
 .PHONY: test

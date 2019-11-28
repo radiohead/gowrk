@@ -2,27 +2,33 @@ package http
 
 import (
 	"errors"
-	"math/rand"
 	"net/http"
-
-	"github.com/radiohead/gowrk/pkg/types"
+	"sync/atomic"
 )
 
 // ErrEmptyPool is returned if the client pool is zero-size.
 var ErrEmptyPool = errors.New("pool of size 0 is not allowed")
 
+//go:generate mockgen -destination=../../test/mocks/http_mocks.go -package=mocks -source=pooled_client.go Client
+
+// Client does a barrlen
+type Client interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
 // PooledClient contains a pool of http.Client instances.
 // The client implements a reduced interface of http.Client.
 type PooledClient struct {
-	poolSize   int
-	clientPool []types.HTTPClient
+	poolSize   uint32
+	poolIdx    uint32
+	clientPool []Client
 }
 
 // NewPooledClient returns a new instance of PooledClient, ready to be used.
 // poolSize controls the amount of clients in the pool
 // and maxIdleConns controls the size of the connection pool of individual clients.
-func NewPooledClient(poolSize uint16, maxIdleConns uint16) (*PooledClient, error) {
-	clients := make([]types.HTTPClient, poolSize)
+func NewPooledClient(poolSize uint32, maxIdleConns uint32) (*PooledClient, error) {
+	clients := make([]Client, poolSize)
 	for i := 0; i < int(poolSize); i++ {
 		clients[i] = NewClient(maxIdleConns)
 	}
@@ -32,18 +38,18 @@ func NewPooledClient(poolSize uint16, maxIdleConns uint16) (*PooledClient, error
 
 // NewPooledClientWithPool returns a new instance of PooledClient,
 // with client pool set from the pool, which is copied and can be later re-used safely.
-func NewPooledClientWithPool(pool []types.HTTPClient) (*PooledClient, error) {
+func NewPooledClientWithPool(pool []Client) (*PooledClient, error) {
 	poolSize := len(pool)
 	if poolSize < 1 {
 		return nil, ErrEmptyPool
 	}
 
-	clientPool := make([]types.HTTPClient, poolSize)
+	clientPool := make([]Client, poolSize)
 	copy(clientPool, pool)
 
 	return &PooledClient{
 		clientPool: clientPool,
-		poolSize:   poolSize,
+		poolSize:   uint32(poolSize),
 	}, nil
 }
 
@@ -58,7 +64,7 @@ func (c *PooledClient) Do(request *http.Request) (*http.Response, error) {
 	return client.Do(request)
 }
 
-func (c *PooledClient) getClient() (types.HTTPClient, error) {
+func (c *PooledClient) getClient() (Client, error) {
 	if c.poolSize < 1 {
 		return nil, ErrEmptyPool
 	}
@@ -67,5 +73,9 @@ func (c *PooledClient) getClient() (types.HTTPClient, error) {
 		return c.clientPool[0], nil
 	}
 
-	return c.clientPool[rand.Intn(c.poolSize)], nil
+	// Take the next client in the pool.
+	// uint32 overflow resets to 0.
+	idx := atomic.AddUint32(&c.poolIdx, 1) % c.poolSize
+
+	return c.clientPool[idx], nil
 }

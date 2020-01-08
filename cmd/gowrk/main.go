@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/radiohead/gowrk/cmd/gowrk/config"
-	"github.com/radiohead/gowrk/pkg/http"
-	"github.com/radiohead/gowrk/pkg/runner"
+	"radiohead/gowrk/cmd/gowrk/config"
+	"radiohead/gowrk/pkg/http"
+	"radiohead/gowrk/pkg/runner"
 )
 
 func main() {

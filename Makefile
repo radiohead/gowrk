@@ -8,11 +8,11 @@ run:
 .PHONY: run
 
 build:
-	CGO_ENABLED=0 go build -ldflags "-s -w" -o ./build/gowrk ./cmd/gowrk
+	CGO_ENABLED=0 go build -mod=vendor -o ./build/gowrk ./cmd/gowrk
 .PHONY: build
 
 install:
-	CGO_ENABLED=0 go install -ldflags "-s -w" ./cmd/gowrk
+	CGO_ENABLED=0 go install -mod=vendor -ldflags "-s -w" ./cmd/gowrk
 .PHONY: install
 
 lint:

@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	wrkHttp "github.com/radiohead/gowrk/pkg/http"
-	"github.com/radiohead/gowrk/test/mocks"
+	wrkHttp "radiohead/gowrk/pkg/http"
+	"radiohead/gowrk/test/mocks"
 )
 
 func TestNewPooledClient(t *testing.T) {

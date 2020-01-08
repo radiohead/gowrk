@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	wrkHttp "github.com/radiohead/gowrk/pkg/http"
+	wrkHttp "radiohead/gowrk/pkg/http"
 	"github.com/stretchr/testify/assert"
 )
 

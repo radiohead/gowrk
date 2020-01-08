@@ -8,8 +8,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/radiohead/gowrk/cmd/gowrk/config"
-	"github.com/radiohead/gowrk/test/mocks"
+	"radiohead/gowrk/cmd/gowrk/config"
+	"radiohead/gowrk/test/mocks"
 )
 
 func TestNewFromFlagSet(t *testing.T) {
